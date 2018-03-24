@@ -1,15 +1,18 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
 
 from .models.search import Searchable, SearchableSerializer
-from .models.events import Event, Place, PlaceSerializer, Attendee
+from .models.events import Event, Place, PlaceSerializer, Attendee, Comment
 from .models.locale import Country ,CountrySerializer, SPR, SPRSerializer, City, CitySerializer
 from .models.profiles import Team, UserProfile, Member
+
+from .forms import NewCommentForm
 
 import simplejson
 
@@ -126,3 +129,23 @@ def attend_event(request, event_id):
     messages.add_message(request, messages.SUCCESS, message=_("We'll see you there!"))
     return redirect(event.get_absolute_url())
 
+@login_required
+def create_comment(request, event_id):
+    event = Event.objects.get(id=event_id)
+
+    if request.user.is_anonymous:
+        messages.add_message(request, messages.WARNING, message=_("You must be logged in to comment."))
+        return redirect(event.get_absolute_url())
+    
+    if request.method == 'POST':
+        form = NewCommentForm(request.POST)
+
+        if form.is_valid():
+            comment = form.save(commit=True)
+            comment.event = event
+            comment.author = request.user.profile
+            comment.save()
+
+            return redirect(event.get_absolute_url())
+
+    return redirect(event.get_absolute_url())

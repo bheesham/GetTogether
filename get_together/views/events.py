@@ -6,9 +6,9 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 
 from events.models.profiles import Team, UserProfile, Member
-from events.forms import TeamEventForm, NewTeamEventForm, DeleteEventForm, NewPlaceForm
+from events.forms import TeamEventForm, NewTeamEventForm, DeleteEventForm, NewPlaceForm, NewCommentForm
 
-from events.models.events import Event, Place, Attendee
+from events.models.events import Event, Place, Attendee, Comment
 
 import datetime
 import simplejson
@@ -29,6 +29,8 @@ def show_event(request, event_id, event_slug):
         'is_attending': request.user.profile in event.attendees.all(),
         'attendee_list': Attendee.objects.filter(event=event),
         'can_edit_event': request.user.profile.can_edit_event(event),
+        'comment_form': NewCommentForm(),
+        'comments': Comment.objects.filter(event=event),
     }
     return render(request, 'get_together/events/show_event.html', context)
 
@@ -48,7 +50,7 @@ def create_event(request, team_id):
         return render(request, 'get_together/events/create_event.html', context)
     elif request.method == 'POST':
         form = NewTeamEventForm(request.POST)
-        if form.is_valid:
+        if form.is_valid():
             form.instance.team = team
             form.instance.created_by = request.user.profile
             new_event = form.save()
@@ -78,7 +80,7 @@ def add_place_to_event(request, event_id):
         return render(request, 'get_together/places/create_place.html', context)
     elif request.method == 'POST':
         form = NewPlaceForm(request.POST)
-        if form.is_valid:
+        if form.is_valid():
             new_place = form.save()
             event.place = new_place
             event.save()
@@ -117,7 +119,7 @@ def edit_event(request, event_id):
         return render(request, 'get_together/events/edit_event.html', context)
     elif request.method == 'POST':
         form = TeamEventForm(request.POST,instance=event)
-        if form.is_valid:
+        if form.is_valid():
             new_event = form.save()
             return redirect(new_event.get_absolute_url())
         else:

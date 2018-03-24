@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from .models.locale import Language, Continent, Country, SPR, City
 from .models.profiles import UserProfile, Organization, Team, Member, Category, Topic
 from .models.search import Searchable
-from .models.events import Place, Event, Attendee
+from .models.events import Place, Event, Attendee, Comment
 
 admin.site.register(Language)
 admin.site.register(Continent)
@@ -79,3 +79,7 @@ admin.site.register(Category, CategoryAdmin)
 class TopicAdmin(admin.ModelAdmin):
     list_display = ('name', 'category')
     list_filter = ('category',)
+
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('author', 'created_time', 'times_flagged')
+admin.site.register(Comment, CommentAdmin)

@@ -63,6 +63,7 @@ urlpatterns = [
     path('events/<int:event_id>/+add_place/', views.add_place_to_event, name='add-place'),
     path('events/<int:event_id>/+share/', views.share_event, name='share-event'),
     path('events/<int:event_id>/<str:event_slug>/', views.show_event, name='show-event'),
+    path('events/<int:event_id>/+create_comment/', event_views.create_comment, name='create-comment'),
 
     path('places/', views.places_list, name='places'),
     path('places/<int:place_id>/', views.show_place, name='show-place'),

@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django.contrib.auth.models import User
 from .models.profiles import Team, UserProfile
-from .models.events import Event, Place
+from .models.events import Event, Place, Comment
 
 from datetime import time
 from time import strptime, strftime
@@ -240,3 +240,12 @@ class SearchForm(forms.Form):
         widgets ={
             'city': Lookup(source='/api/cities/', label='name'),
         }
+
+class NewCommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['body']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['body'].required = True

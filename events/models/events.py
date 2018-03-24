@@ -3,6 +3,7 @@ from django.contrib.sites.models import Site
 from django.contrib.auth.models import User, Group
 from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import reverse
+from django.utils import timezone
 
 from rest_framework import serializers
 
@@ -12,7 +13,6 @@ from .search import *
 
 import re
 import pytz
-import datetime
 import unicodedata
 import hashlib
 
@@ -63,13 +63,14 @@ class Event(models.Model):
     announce_url = models.URLField(verbose_name=_('Announcement'), help_text=_('URL for the announcement'), max_length=200, blank=True, null=True)
 
     created_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    created_time = models.DateTimeField(help_text=_('the date and time when the event was created'), default=datetime.datetime.now, db_index=True)
+    created_time = models.DateTimeField(help_text=_('the date and time when the event was created'), default=timezone.now, db_index=True)
 
     tags = models.CharField(verbose_name=_("Keyword Tags"), blank=True, null=True, max_length=128)
     #image
     #replies
 
     attendees = models.ManyToManyField(UserProfile, through='Attendee', related_name="attending", blank=True)
+    comments = models.ManyToManyField('Comment', related_name="comments")
 
     def get_absolute_url(self):
         return reverse('show-event', kwargs={'event_id': self.id, 'event_slug': self.slug})
@@ -89,6 +90,15 @@ class Event(models.Model):
         super().save(*args, **kwargs)  # Call the "real" save() method.
         update_event_searchable(self)
 
+
+class Comment(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    created_time = models.DateTimeField(default=timezone.now)
+    times_flagged = models.PositiveIntegerField(default=0)
+    body = models.TextField()
+
+
 def update_event_searchable(event):
     site = Site.objects.get(id=1)
     event_url = "https://%s%s" % (site.domain, event.get_absolute_url())
@@ -107,7 +117,7 @@ def update_event_searchable(event):
         searchable = Searchable(event_uri)
         searchable.origin_node = origin_url
         searchable.federation_node = origin_url
-        searchable.federation_time = datetime.datetime.now()
+        searchable.federation_time = timezone.now()
 
     searchable.event_url = event_url
 
@@ -171,7 +181,7 @@ class Attendee(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     role = models.SmallIntegerField(_("Role"), choices=ROLES, default=NORMAL, db_index=True)
     status = models.SmallIntegerField(_("Attending?"), choices=STATUSES, default=YES, db_index=True)
-    joined_date = models.DateTimeField(default=datetime.datetime.now)
+    joined_date = models.DateTimeField(default=timezone.now)
 
     @property
     def role_name(self):
