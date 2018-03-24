@@ -138,12 +138,10 @@ def create_comment(request, event_id):
         return redirect(event.get_absolute_url())
     
     if request.method == 'POST':
-        form = NewCommentForm(request.POST)
+        comment = Comment(author=request.user.profile, event=event)
+        form = NewCommentForm(request.POST, instance=comment)
 
         if form.is_valid():
-            comment = form.save(commit=True)
-            comment.event = event
-            comment.author = request.user.profile
             comment.save()
 
             return redirect(event.get_absolute_url())
