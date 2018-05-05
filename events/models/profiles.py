@@ -214,7 +214,12 @@ class Team(models.Model):
     admin_profiles = models.ManyToManyField(UserProfile, related_name='admins', blank=True)
     contact_profiles = models.ManyToManyField(UserProfile, related_name='contacts', blank=True)
 
-    cover_img = models.URLField(_("Team Photo"), null=True, blank=True)
+    cover_img = ProcessedImageField(verbose_name=_("Cover Image"),
+            upload_to='cover_images',
+            processors=[ResizeToFill(700, 240)],
+            format='PNG',
+            blank=True)
+
     languages = models.ManyToManyField(Language, blank=True)
     active = models.BooleanField(_("Active Team"), default=True)
     tz = models.CharField(max_length=32, verbose_name=_('Default Timezone'), default='UTC', choices=location.TimezoneChoices(), blank=False, null=False, help_text=_('The most commonly used timezone for this Team.'))

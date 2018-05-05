@@ -32,8 +32,9 @@
                 {% endif %}
                 <a href="{% url 'team-event-ical' team.id %}" class="btn btn-success btn-sm">iCal</a>
             </h2>
-
-
+            {% if team.cover_img %}
+            <img src="{{ team.cover_img.url }}" alt="{{team.name}}'s cover image" height="700px" width="240px">
+            {% endif %}
             <table class="table">
             {% if team.description %}
             <tr>
